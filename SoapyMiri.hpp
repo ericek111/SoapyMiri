@@ -91,11 +91,11 @@ public:
      * Antenna API
      ******************************************************************/
 
-    std::vector<std::string> listAntennas(const int direction, const size_t channel) const override;
+    std::vector<std::string> listAntennas(const int direction, const size_t channel) const;
 
-    void setAntenna(const int direction, const size_t channel, const std::string &name) override;
+    void setAntenna(const int direction, const size_t channel, const std::string &name);
 
-    std::string getAntenna(const int direction, const size_t channel) const override;
+    std::string getAntenna(const int direction, const size_t channel) const;
 
     /*******************************************************************
      * Frontend corrections API
