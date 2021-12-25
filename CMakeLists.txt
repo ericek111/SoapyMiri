@@ -36,7 +36,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     endif ()
 
     #Thread support enabled (not the same as -lpthread)
-    list(APPEND RTLSDR_LIBRARIES -pthread)
+    list(APPEND LIBMIRISDR_LIBRARIES -pthread)
 
     #disable warnings for unused parameters
     add_definitions(-Wno-unused-parameter)
@@ -51,6 +51,9 @@ SOAPY_SDR_MODULE_UTIL(
     TARGET miriSupport
     SOURCES
         SoapyMiri.hpp
+        Registration.cpp
+        Settings.cpp
+        Streaming.cpp
     LIBRARIES
         ${LIBMIRISDR_LIBRARIES}
 )

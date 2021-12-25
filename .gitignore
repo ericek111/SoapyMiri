@@ -1,2 +1,4 @@
-build/
-CMakeLists.txt.user
+.idea
+/build/
+/cmake-build-debug/
+/CMakeLists.txt.user
