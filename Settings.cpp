@@ -281,6 +281,9 @@ void SoapyMiri::setSampleRate(const int direction, const size_t channel, const d
     if (mirisdr_set_sample_rate(dev, (uint32_t) rate) != 0) {
          throw std::runtime_error("mirisdr_set_sample_rate failed");
     }
+
+    auto newSampleRate = (double) mirisdr_get_sample_rate(dev);
+    this->sampleRate = newSampleRate;
 }
 
 double SoapyMiri::getSampleRate(const int direction, const size_t channel) const
@@ -288,7 +291,8 @@ double SoapyMiri::getSampleRate(const int direction, const size_t channel) const
     if (!dev)
         return 0;
 
-    return (double) mirisdr_get_sample_rate(dev);
+    // return (double) mirisdr_get_sample_rate(dev);
+    return sampleRate;
 }
 
 std::vector<double> SoapyMiri::listSampleRates(const int direction, const size_t channel) const

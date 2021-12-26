@@ -9,6 +9,15 @@
 #include <atomic>
 #include "mirisdr.h"
 
+#define DEFAULT_BUFFER_LENGTH (2304 * 8 * 2)
+#define DEFAULT_NUM_BUFFERS 15
+#define BYTES_PER_SAMPLE 2
+
+typedef enum miriSampleFormat
+{
+    MIRI_FORMAT_CF32
+} miriSampleFormat;
+
 class SoapyMiri: public SoapySDR::Device
 {
 public:
@@ -205,6 +214,8 @@ private:
     //cached settings
     uint32_t deviceIdx;
     bool isOffsetTuning;
+    double sampleRate;
+    miriSampleFormat sampleFormat;
 
 public:
     struct Buffer
@@ -221,15 +232,16 @@ public:
     std::mutex _buf_mutex;
     std::condition_variable _buf_cond;
 
-    std::vector<Buffer> _buffs;
+    size_t numBuffers, bufferLength;
+
+    std::vector<Buffer> buffs;
     size_t	_buf_head;
     size_t	_buf_tail;
     std::atomic<size_t>	_buf_count;
-    signed char *_currentBuff;
+    uint32_t* _currentBuff;
     std::atomic<bool> _overflowEvent;
     size_t _currentHandle;
     size_t bufferedElems;
-    long long bufTicks;
     std::atomic<bool> resetBuffer;
 
 };
