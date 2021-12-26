@@ -48,7 +48,7 @@ if (APPLE)
 endif (APPLE)
 
 SOAPY_SDR_MODULE_UTIL(
-    TARGET miriSupport
+    TARGET soapyMiriSupport
     SOURCES
         SoapyMiri.hpp
         Registration.cpp
