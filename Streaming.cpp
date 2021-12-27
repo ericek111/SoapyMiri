@@ -241,7 +241,6 @@ int SoapyMiri::readStream(
 
     size_t returnedElems = std::min(bufferedElems, numElems);
 
-
     // convert into user's buff0
     if (sampleFormat == MIRI_FORMAT_CF32)
     {
@@ -254,7 +253,7 @@ int SoapyMiri::readStream(
 
     // bump variables for next call into readStream
     bufferedElems -= returnedElems;
-    _currentBuff += returnedElems * BYTES_PER_SAMPLE;
+    _currentBuff += returnedElems * 2; // BYTES_PER_SAMPLE is handled by _currentBuff being uint16_t*, only account for I/Q.
 
     if (bufferedElems != 0) {
         flags |= SOAPY_SDR_MORE_FRAGMENTS;
@@ -326,7 +325,8 @@ int SoapyMiri::acquireReadBuffer(
     outBuffs[0] = (void *)buffs[handle].data.data();
 
     // return number available
-    return buffs[handle].data.size() / BYTES_PER_SAMPLE;
+    return buffs[handle].data.size() / BYTES_PER_SAMPLE / 2; // 2 = I/Q, BYTES_PER_SAMPLE = 2 for uint16_t
+                                                             // (since we only return 12-bit values wrapped in shorts)
 }
 
 void SoapyMiri::releaseReadBuffer(

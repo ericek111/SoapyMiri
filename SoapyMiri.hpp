@@ -238,7 +238,7 @@ public:
     size_t	_buf_head;
     size_t	_buf_tail;
     std::atomic<size_t>	_buf_count;
-    uint32_t* _currentBuff;
+    uint16_t* _currentBuff;
     std::atomic<bool> _overflowEvent;
     size_t _currentHandle;
     size_t bufferedElems;
