@@ -18,8 +18,10 @@ std::vector<SoapySDR::Kwargs> SoapyMiri::findMiriSDR(const SoapySDR::Kwargs &arg
         }
         SoapySDR_logf(SOAPY_SDR_DEBUG, "\tManufacturer: %s, Product Name: %s, Serial: %s", manufact, product, serial);
 
+        std::string deviceName = mirisdr_get_device_name(i);
+
         SoapySDR::Kwargs devInfo;
-        devInfo["label"] = std::string(mirisdr_get_device_name(i)) + " :: " + serial;
+        devInfo["label"] = std::string(deviceName) + " :: " + serial;
         // don't we need to duplicate the char buffers here?
         devInfo["product"] = product;
         devInfo["serial"] = serial;
@@ -43,4 +45,4 @@ static SoapySDR::Device *makeMiriSDR(const SoapySDR::Kwargs &args)
     return new SoapyMiri(args);
 }
 
-static SoapySDR::Registry registerMiri("rtlsdr", &SoapyMiri::findMiriSDR, &makeMiriSDR, SOAPY_SDR_ABI_VERSION);
+static SoapySDR::Registry registerMiri("soapyMiri", &SoapyMiri::findMiriSDR, &makeMiriSDR, SOAPY_SDR_ABI_VERSION);
