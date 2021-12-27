@@ -178,20 +178,6 @@ public:
     SoapySDR::RangeList getBandwidthRange(const int direction, const size_t channel) const;
 
     /*******************************************************************
-     * Time API
-     ******************************************************************/
-
-    std::vector<std::string> listTimeSources(void) const;
-
-    std::string getTimeSource(void) const;
-
-    bool hasHardwareTime(const std::string &what = "") const;
-
-    long long getHardwareTime(const std::string &what = "") const;
-
-    void setHardwareTime(const long long timeNs, const std::string &what = "");
-
-    /*******************************************************************
      * Settings API
      ******************************************************************/
 

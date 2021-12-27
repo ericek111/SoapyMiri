@@ -371,37 +371,6 @@ SoapySDR::RangeList SoapyMiri::getBandwidthRange(const int direction, const size
 }
 
 /*******************************************************************
- * Time API
- ******************************************************************/
-
-std::vector<std::string> SoapyMiri::listTimeSources(void) const
-{
-    std::vector<std::string> results;
-    
-    return results;
-}
-
-std::string SoapyMiri::getTimeSource(void) const
-{
-    return "";
-}
-
-bool SoapyMiri::hasHardwareTime(const std::string &what) const
-{
-    // TODO: First try to understand it, then implement it.
-    return false;
-}
-
-long long SoapyMiri::getHardwareTime(const std::string &what) const
-{
-    return 0;
-}
-
-void SoapyMiri::setHardwareTime(const long long timeNs, const std::string &what)
-{
-}
-
-/*******************************************************************
  * Settings API
  ******************************************************************/
 
