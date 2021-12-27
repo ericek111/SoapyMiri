@@ -215,10 +215,9 @@ public:
     void rx_async_operation(void);
     void rx_callback(unsigned char *buf, uint32_t len);
 
-    std::mutex _buf_mutex;
-    std::condition_variable _buf_cond;
-
-    size_t numBuffers, bufferLength;
+    // driver options
+    size_t optNumBuffers;
+    size_t optBufferLength;
 
     std::vector<Buffer> buffs;
     size_t	_buf_head;
@@ -227,7 +226,9 @@ public:
     uint16_t* _currentBuff;
     std::atomic<bool> _overflowEvent;
     size_t _currentHandle;
-    size_t bufferedElems;
+    size_t remainingElems;
     std::atomic<bool> resetBuffer;
+    std::mutex _buf_mutex;
+    std::condition_variable _buf_cond;
 
 };

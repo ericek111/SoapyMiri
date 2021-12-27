@@ -4,9 +4,9 @@
  ******************************************************************/
 
 SoapyMiri::SoapyMiri(const SoapySDR::Kwargs &args):
-    dev(nullptr),
-    bufferedElems(0),
-    resetBuffer(false)
+        dev(nullptr),
+        remainingElems(0),
+        resetBuffer(false)
 {
     if (args.count("label") != 0) {
         SoapySDR_logf(SOAPY_SDR_INFO, "Opening %s...", args.at("label").c_str());

@@ -65,18 +65,18 @@ static void _rx_callback(unsigned char *buf, uint32_t len, void *ctx)
 
 void SoapyMiri::rx_async_operation(void)
 {
-    mirisdr_read_async(dev, &_rx_callback, this, numBuffers, bufferLength);
+    mirisdr_read_async(dev, &_rx_callback, this, optNumBuffers, optBufferLength);
 }
 
 void SoapyMiri::rx_callback(unsigned char *buf, uint32_t len)
 {
-    //printf("_rx_callback %d _buf_head=%d, numBuffers=%d\n", len, _buf_head, _buf_tail);
+    //printf("_rx_callback %d _buf_head=%d, optNumBuffers=%d\n", len, _buf_head, _buf_tail);
 
     // atomically add len to ticks but return the previous value
     // unsigned long long tick = ticks.fetch_add(len);
 
     // overflow condition: the caller is not reading fast enough
-    if (_buf_count == numBuffers) {
+    if (_buf_count == optNumBuffers) {
         _overflowEvent = true;
         return;
     }
@@ -88,7 +88,7 @@ void SoapyMiri::rx_callback(unsigned char *buf, uint32_t len)
     std::memcpy(buff.data.data(), buf, len);
 
     // increment the tail pointer
-    _buf_tail = (_buf_tail + 1) % numBuffers;
+    _buf_tail = (_buf_tail + 1) % optNumBuffers;
 
     // increment buffers available under lock to avoid race in acquireReadBuffer wait
     {
@@ -124,7 +124,7 @@ SoapySDR::Stream *SoapyMiri::setupStream(
 
     sampleFormat = MIRI_FORMAT_CF32;
 
-    bufferLength = DEFAULT_BUFFER_LENGTH;
+    optBufferLength = DEFAULT_BUFFER_LENGTH;
     if (args.count("bufflen") != 0)
     {
         try
@@ -132,24 +132,24 @@ SoapySDR::Stream *SoapyMiri::setupStream(
             int bufferLength_in = std::stoi(args.at("bufflen"));
             if (bufferLength_in > 0)
             {
-                bufferLength = bufferLength_in;
+                optBufferLength = bufferLength_in;
             }
         }
         catch (const std::invalid_argument &){}
     }
-    SoapySDR_logf(SOAPY_SDR_DEBUG, "RTL-SDR Using buffer length %d", bufferLength);
+    SoapySDR_logf(SOAPY_SDR_DEBUG, "RTL-SDR Using buffer length %d", optBufferLength);
 
-    numBuffers = DEFAULT_NUM_BUFFERS;
+    optNumBuffers = DEFAULT_NUM_BUFFERS;
     if (args.count("buffers") != 0) {
         try {
             int numBuffers_in = std::stoi(args.at("buffers"));
             if (numBuffers_in > 0) {
-                numBuffers = numBuffers_in;
+                optNumBuffers = numBuffers_in;
             }
         }
         catch (const std::invalid_argument &){}
     }
-    SoapySDR_logf(SOAPY_SDR_DEBUG, "SoapyMiri Using %d buffers", numBuffers);
+    SoapySDR_logf(SOAPY_SDR_DEBUG, "SoapyMiri Using %d buffers", optNumBuffers);
 
     // clear async fifo counts
     _buf_tail = 0;
@@ -157,10 +157,10 @@ SoapySDR::Stream *SoapyMiri::setupStream(
     _buf_head = 0;
 
     // allocate buffers
-    buffs.resize(numBuffers);
+    buffs.resize(optNumBuffers);
     for (auto &buff : buffs) {
-        buff.data.reserve(bufferLength);
-        buff.data.resize(bufferLength);
+        buff.data.reserve(optBufferLength);
+        buff.data.resize(optBufferLength);
     }
 
     return (SoapySDR::Stream *) this;
@@ -174,7 +174,7 @@ void SoapyMiri::closeStream(SoapySDR::Stream *stream)
 
 size_t SoapyMiri::getStreamMTU(SoapySDR::Stream *stream) const
 {
-    return bufferLength / BYTES_PER_SAMPLE;
+    return optBufferLength / BYTES_PER_SAMPLE;
 }
 
 int SoapyMiri::activateStream(
@@ -187,7 +187,7 @@ int SoapyMiri::activateStream(
         return 0;
 
     resetBuffer = true;
-    bufferedElems = 0;
+    remainingElems = 0;
 
     if (!_rx_async_thread.joinable())
     {
@@ -220,9 +220,9 @@ int SoapyMiri::readStream(
         const long timeoutUs)
 {
     // drop remainder buffer on reset
-    if (resetBuffer && bufferedElems != 0)
+    if (resetBuffer && remainingElems != 0)
     {
-        bufferedElems = 0;
+        remainingElems = 0;
         this->releaseReadBuffer(stream, _currentHandle);
     }
 
@@ -230,16 +230,16 @@ int SoapyMiri::readStream(
     void* buff0 = buffs[0];
 
     // are elements left in the buffer? if not, do a new read.
-    if (bufferedElems == 0)
+    if (remainingElems == 0)
     {
         int ret = this->acquireReadBuffer(stream, _currentHandle, (const void **)&_currentBuff, flags, timeNs, timeoutUs);
         if (ret < 0) {
             return ret;
         }
-        bufferedElems = ret;
+        remainingElems = ret;
     }
 
-    size_t returnedElems = std::min(bufferedElems, numElems);
+    size_t returnedElems = std::min(remainingElems, numElems);
 
     // convert into user's buff0
     if (sampleFormat == MIRI_FORMAT_CF32)
@@ -252,10 +252,10 @@ int SoapyMiri::readStream(
     }
 
     // bump variables for next call into readStream
-    bufferedElems -= returnedElems;
+    remainingElems -= returnedElems;
     _currentBuff += returnedElems * 2; // BYTES_PER_SAMPLE is handled by _currentBuff being uint16_t*, only account for I/Q.
 
-    if (bufferedElems != 0) {
+    if (remainingElems != 0) {
         flags |= SOAPY_SDR_MORE_FRAGMENTS;
     } else {
         this->releaseReadBuffer(stream, _currentHandle);
@@ -292,7 +292,7 @@ int SoapyMiri::acquireReadBuffer(
     if (resetBuffer)
     {
         // drain all buffers from the fifo
-        _buf_head = (_buf_head + _buf_count.exchange(0)) % numBuffers;
+        _buf_head = (_buf_head + _buf_count.exchange(0)) % optNumBuffers;
         resetBuffer = false;
         _overflowEvent = false;
     }
@@ -301,7 +301,7 @@ int SoapyMiri::acquireReadBuffer(
     if (_overflowEvent)
     {
         // drain the old buffers from the fifo
-        _buf_head = (_buf_head + _buf_count.exchange(0)) % numBuffers;
+        _buf_head = (_buf_head + _buf_count.exchange(0)) % optNumBuffers;
         _overflowEvent = false;
         SoapySDR::log(SOAPY_SDR_SSI, "O");
         return SOAPY_SDR_OVERFLOW;
@@ -317,11 +317,9 @@ int SoapyMiri::acquireReadBuffer(
         }
     }
 
-    // TODO: what if _buf_head == 0 ?
-
     // extract handle and buffer
     handle = _buf_head;
-    _buf_head = (_buf_head + 1) % numBuffers;
+    _buf_head = (_buf_head + 1) % optNumBuffers;
     outBuffs[0] = (void *)buffs[handle].data.data();
 
     // return number available
