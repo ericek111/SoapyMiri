@@ -1,13 +1,13 @@
 #include "SoapyMiri.hpp"
+
 /*******************************************************************
  * Identification API
  ******************************************************************/
 
-SoapyMiri::SoapyMiri(const SoapySDR::Kwargs &args):
+SoapyMiri::SoapyMiri(const SoapySDR::Kwargs &args) :
         dev(nullptr),
         remainingElems(0),
-        resetBuffer(false)
-{
+        resetBuffer(false) {
     if (args.count("label") != 0) {
         SoapySDR_logf(SOAPY_SDR_INFO, "Opening %s...", args.at("label").c_str());
     }
@@ -26,8 +26,7 @@ SoapyMiri::SoapyMiri(const SoapySDR::Kwargs &args):
     }
 }
 
-SoapyMiri::~SoapyMiri(void)
-{
+SoapyMiri::~SoapyMiri(void) {
     if (dev) {
         mirisdr_close(dev);
     }
@@ -37,19 +36,16 @@ SoapyMiri::~SoapyMiri(void)
  * Identification API
  ******************************************************************/
 
-std::string SoapyMiri::getDriverKey(void) const
-{
+std::string SoapyMiri::getDriverKey(void) const {
     return "MIRI";
 }
 
-std::string SoapyMiri::getHardwareKey(void) const
-{
+std::string SoapyMiri::getHardwareKey(void) const {
     // TODO: Lay down framework for more SDRplay devices. The API only supports RSP1 now, though.
     return "RSP1";
 }
 
-SoapySDR::Kwargs SoapyMiri::getHardwareInfo(void) const
-{
+SoapySDR::Kwargs SoapyMiri::getHardwareInfo(void) const {
     SoapySDR::Kwargs args;
 
     args["origin"] = "https://github.com/ericek111/SoapyMiri";
@@ -62,13 +58,11 @@ SoapySDR::Kwargs SoapyMiri::getHardwareInfo(void) const
  * Channels API
  ******************************************************************/
 
-size_t SoapyMiri::getNumChannels(const int dir) const
-{
+size_t SoapyMiri::getNumChannels(const int dir) const {
     return (dir == SOAPY_SDR_RX) ? 1 : 0;
 }
 
-bool SoapyMiri::getFullDuplex(const int direction, const size_t channel) const
-{
+bool SoapyMiri::getFullDuplex(const int direction, const size_t channel) const {
     return false;
 }
 
@@ -76,23 +70,19 @@ bool SoapyMiri::getFullDuplex(const int direction, const size_t channel) const
  * Antenna API
  ******************************************************************/
 
-std::vector<std::string> SoapyMiri::listAntennas(const int direction, const size_t channel) const
-{
+std::vector<std::string> SoapyMiri::listAntennas(const int direction, const size_t channel) const {
     std::vector<std::string> antennas;
     antennas.push_back(getAntenna(direction, channel));
     return antennas;
 }
 
-void SoapyMiri::setAntenna(const int direction, const size_t channel, const std::string &name)
-{
-    if (direction != SOAPY_SDR_RX)
-    {
+void SoapyMiri::setAntenna(const int direction, const size_t channel, const std::string &name) {
+    if (direction != SOAPY_SDR_RX) {
         throw std::runtime_error("setAntenna failed: libmirisdr only supports RX.");
     }
 }
 
-std::string SoapyMiri::getAntenna(const int direction, const size_t channel) const
-{
+std::string SoapyMiri::getAntenna(const int direction, const size_t channel) const {
     return "RX";
 }
 
@@ -100,23 +90,20 @@ std::string SoapyMiri::getAntenna(const int direction, const size_t channel) con
  * Frontend corrections API
  ******************************************************************/
 
-bool SoapyMiri::hasDCOffsetMode(const int direction, const size_t channel) const
-{
+bool SoapyMiri::hasDCOffsetMode(const int direction, const size_t channel) const {
     return false;
 }
 
-bool SoapyMiri::hasFrequencyCorrection(const int direction, const size_t channel) const
-{
+bool SoapyMiri::hasFrequencyCorrection(const int direction, const size_t channel) const {
     return false;
 }
 
-void SoapyMiri::setFrequencyCorrection(const int direction, const size_t channel, const double value)
-{
-    SoapySDR_logf(SOAPY_SDR_DEBUG, "Frequency correction is not implemented yet in LibMiriSDR! Tried to set to %f.", value);
+void SoapyMiri::setFrequencyCorrection(const int direction, const size_t channel, const double value) {
+    SoapySDR_logf(SOAPY_SDR_DEBUG, "Frequency correction is not implemented yet in LibMiriSDR! Tried to set to %f.",
+                  value);
 }
 
-double SoapyMiri::getFrequencyCorrection(const int direction, const size_t channel) const
-{
+double SoapyMiri::getFrequencyCorrection(const int direction, const size_t channel) const {
     return 0;
 }
 
@@ -124,20 +111,17 @@ double SoapyMiri::getFrequencyCorrection(const int direction, const size_t chann
  * Gain API
  ******************************************************************/
 
-std::vector<std::string> SoapyMiri::listGains(const int direction, const size_t channel) const
-{
+std::vector<std::string> SoapyMiri::listGains(const int direction, const size_t channel) const {
     std::vector<std::string> gains;
     gains.push_back("LNA");
     return gains;
 }
 
-bool SoapyMiri::hasGainMode(const int direction, const size_t channel) const
-{
+bool SoapyMiri::hasGainMode(const int direction, const size_t channel) const {
     return true;
 }
 
-void SoapyMiri::setGainMode(const int direction, const size_t channel, const bool automatic)
-{
+void SoapyMiri::setGainMode(const int direction, const size_t channel, const bool automatic) {
     if (!dev)
         return;
 
@@ -147,24 +131,21 @@ void SoapyMiri::setGainMode(const int direction, const size_t channel, const boo
     }
 }
 
-bool SoapyMiri::getGainMode(const int direction, const size_t channel) const
-{
+bool SoapyMiri::getGainMode(const int direction, const size_t channel) const {
     if (!dev)
         return false;
 
     return (bool) mirisdr_get_tuner_gain_mode(dev);
 }
 
-void SoapyMiri::setGain(const int direction, const size_t channel, const double value)
-{
+void SoapyMiri::setGain(const int direction, const size_t channel, const double value) {
     if (!dev)
         return;
 
     mirisdr_set_tuner_gain(dev, (int) (value * 10.0));
 }
 
-void SoapyMiri::setGain(const int direction, const size_t channel, const std::string &name, const double value)
-{
+void SoapyMiri::setGain(const int direction, const size_t channel, const std::string &name, const double value) {
     if (!dev)
         return;
 
@@ -176,8 +157,7 @@ void SoapyMiri::setGain(const int direction, const size_t channel, const std::st
     }
 }
 
-double SoapyMiri::getGain(const int direction, const size_t channel, const std::string &name) const
-{
+double SoapyMiri::getGain(const int direction, const size_t channel, const std::string &name) const {
     if (!dev)
         return 0.0;
 
@@ -188,8 +168,7 @@ double SoapyMiri::getGain(const int direction, const size_t channel, const std::
     return 0.0;
 }
 
-SoapySDR::Range SoapyMiri::getGainRange(const int direction, const size_t channel, const std::string &name) const
-{
+SoapySDR::Range SoapyMiri::getGainRange(const int direction, const size_t channel, const std::string &name) const {
     if (!dev)
         return {};
 
@@ -209,36 +188,31 @@ void SoapyMiri::setFrequency(
         const size_t channel,
         const std::string &name,
         const double frequency,
-        const SoapySDR::Kwargs &args)
-{
+        const SoapySDR::Kwargs &args
+) {
     if (!dev)
         return;
 
-    if (name == "RF")
-    {
+    if (name == "RF") {
         SoapySDR_logf(SOAPY_SDR_DEBUG, "Setting center freq: %d", (uint32_t) frequency);
-        if (mirisdr_set_center_freq(dev, (uint32_t) frequency) != 0)
-        {
+        if (mirisdr_set_center_freq(dev, (uint32_t) frequency) != 0) {
             throw std::runtime_error("mirisdr_set_center_freq failed");
         }
     }
 }
 
-double SoapyMiri::getFrequency(const int direction, const size_t channel, const std::string &name) const
-{
+double SoapyMiri::getFrequency(const int direction, const size_t channel, const std::string &name) const {
     if (!dev)
         return 0;
 
-    if (name == "RF")
-    {
+    if (name == "RF") {
         return (double) mirisdr_get_center_freq(dev);
     }
 
     return 0;
 }
 
-std::vector<std::string> SoapyMiri::listFrequencies(const int direction, const size_t channel) const
-{
+std::vector<std::string> SoapyMiri::listFrequencies(const int direction, const size_t channel) const {
     std::vector<std::string> names;
     names.push_back("RF");
     return names;
@@ -247,20 +221,17 @@ std::vector<std::string> SoapyMiri::listFrequencies(const int direction, const s
 SoapySDR::RangeList SoapyMiri::getFrequencyRange(
         const int direction,
         const size_t channel,
-        const std::string &name) const
-{
+        const std::string &name) const {
 
     SoapySDR::RangeList results;
 
-    if (name == "RF")
-    {
+    if (name == "RF") {
         results.push_back(SoapySDR::Range(0e6, 2000e6)); // DC to 2 GHz. Because why not?
     }
     return results;
 }
 
-SoapySDR::ArgInfoList SoapyMiri::getFrequencyArgsInfo(const int direction, const size_t channel) const
-{
+SoapySDR::ArgInfoList SoapyMiri::getFrequencyArgsInfo(const int direction, const size_t channel) const {
     SoapySDR::ArgInfoList freqArgs;
 
     // TODO: frequency arguments
@@ -271,23 +242,21 @@ SoapySDR::ArgInfoList SoapyMiri::getFrequencyArgsInfo(const int direction, const
 /*******************************************************************
  * Sample Rate API
  ******************************************************************/
- 
-void SoapyMiri::setSampleRate(const int direction, const size_t channel, const double rate)
-{
+
+void SoapyMiri::setSampleRate(const int direction, const size_t channel, const double rate) {
     if (!dev)
         return;
 
     SoapySDR_logf(SOAPY_SDR_DEBUG, "Setting sample rate: %d", rate);
     if (mirisdr_set_sample_rate(dev, (uint32_t) rate) != 0) {
-         throw std::runtime_error("mirisdr_set_sample_rate failed");
+        throw std::runtime_error("mirisdr_set_sample_rate failed");
     }
 
     auto newSampleRate = (double) mirisdr_get_sample_rate(dev);
     this->sampleRate = newSampleRate;
 }
 
-double SoapyMiri::getSampleRate(const int direction, const size_t channel) const
-{
+double SoapyMiri::getSampleRate(const int direction, const size_t channel) const {
     if (!dev)
         return 0;
 
@@ -295,8 +264,7 @@ double SoapyMiri::getSampleRate(const int direction, const size_t channel) const
     return sampleRate;
 }
 
-std::vector<double> SoapyMiri::listSampleRates(const int direction, const size_t channel) const
-{
+std::vector<double> SoapyMiri::listSampleRates(const int direction, const size_t channel) const {
     // TODO: listSampleRates is supposedly deprecated and replaced by getSampleRateRange?
 
     std::vector<double> results;
@@ -306,8 +274,7 @@ std::vector<double> SoapyMiri::listSampleRates(const int direction, const size_t
     return results;
 }
 
-SoapySDR::RangeList SoapyMiri::getSampleRateRange(const int direction, const size_t channel) const
-{
+SoapySDR::RangeList SoapyMiri::getSampleRateRange(const int direction, const size_t channel) const {
     SoapySDR::RangeList results;
 
     std::vector<double> listedRanges = listBandwidths(direction, channel);
@@ -320,8 +287,7 @@ SoapySDR::RangeList SoapyMiri::getSampleRateRange(const int direction, const siz
     return results;
 }
 
-void SoapyMiri::setBandwidth(const int direction, const size_t channel, const double bw)
-{
+void SoapyMiri::setBandwidth(const int direction, const size_t channel, const double bw) {
     if (!dev)
         return;
 
@@ -330,16 +296,14 @@ void SoapyMiri::setBandwidth(const int direction, const size_t channel, const do
     }
 }
 
-double SoapyMiri::getBandwidth(const int direction, const size_t channel) const
-{
+double SoapyMiri::getBandwidth(const int direction, const size_t channel) const {
     if (!dev)
         return 0;
 
     return (double) mirisdr_get_bandwidth(dev);
 }
 
-std::vector<double> SoapyMiri::listBandwidths(const int direction, const size_t channel) const
-{
+std::vector<double> SoapyMiri::listBandwidths(const int direction, const size_t channel) const {
     // TODO: listBandwidths is supposedly deprecated and replaced by getBandwidthRange?
 
     std::vector<double> results;
@@ -358,8 +322,7 @@ std::vector<double> SoapyMiri::listBandwidths(const int direction, const size_t 
     return results;
 }
 
-SoapySDR::RangeList SoapyMiri::getBandwidthRange(const int direction, const size_t channel) const
-{
+SoapySDR::RangeList SoapyMiri::getBandwidthRange(const int direction, const size_t channel) const {
     SoapySDR::RangeList results;
 
     std::vector<double> listedRanges = listBandwidths(direction, channel);
@@ -374,8 +337,7 @@ SoapySDR::RangeList SoapyMiri::getBandwidthRange(const int direction, const size
  * Settings API
  ******************************************************************/
 
-SoapySDR::ArgInfoList SoapyMiri::getSettingInfo(void) const
-{
+SoapySDR::ArgInfoList SoapyMiri::getSettingInfo(void) const {
     SoapySDR::ArgInfoList setArgs;
 
     SoapySDR::ArgInfo offsetTuneArg;
@@ -390,13 +352,11 @@ SoapySDR::ArgInfoList SoapyMiri::getSettingInfo(void) const
     return setArgs;
 }
 
-void SoapyMiri::writeSetting(const std::string &key, const std::string &value)
-{
+void SoapyMiri::writeSetting(const std::string &key, const std::string &value) {
     if (!dev)
         return;
 
-    if (key == "offset_tune")
-    {
+    if (key == "offset_tune") {
         bool offsetMode = (value == "true");
         SoapySDR_logf(SOAPY_SDR_DEBUG, "MiriSDR offset tuning mode: %s", offsetMode ? "450 kHz (on)" : "0 Hz (off)");
         isOffsetTuning = offsetMode;
@@ -406,8 +366,7 @@ void SoapyMiri::writeSetting(const std::string &key, const std::string &value)
     }
 }
 
-std::string SoapyMiri::readSetting(const std::string &key) const
-{
+std::string SoapyMiri::readSetting(const std::string &key) const {
     if (!dev)
         return "";
 

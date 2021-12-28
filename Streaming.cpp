@@ -12,8 +12,8 @@ std::vector<std::string> SoapyMiri::getStreamFormats(const int direction, const 
 }
 
 std::string SoapyMiri::getNativeStreamFormat(const int direction, const size_t channel, double &fullScale) const {
-     fullScale = 128;
-     return SOAPY_SDR_CU16;
+    fullScale = 128;
+    return SOAPY_SDR_CU16;
 }
 
 SoapySDR::ArgInfoList SoapyMiri::getStreamArgsInfo(const int direction, const size_t channel) const {
@@ -56,24 +56,16 @@ SoapySDR::ArgInfoList SoapyMiri::getStreamArgsInfo(const int direction, const si
  * Async thread work
  ******************************************************************/
 
-static void _rx_callback(unsigned char *buf, uint32_t len, void *ctx)
-{
+static void _rx_callback(unsigned char *buf, uint32_t len, void *ctx) {
     auto *self = (SoapyMiri *) ctx;
     self->rx_callback(buf, len);
 }
 
-void SoapyMiri::rx_async_operation(void)
-{
+void SoapyMiri::rx_async_operation(void) {
     mirisdr_read_async(dev, &_rx_callback, this, optNumBuffers, optBufferLength);
 }
 
-void SoapyMiri::rx_callback(unsigned char *buf, uint32_t len)
-{
-    //printf("_rx_callback %d _buf_head=%d, optNumBuffers=%d\n", len, _buf_head, _buf_tail);
-
-    // atomically add len to ticks but return the previous value
-    // unsigned long long tick = ticks.fetch_add(len);
-
+void SoapyMiri::rx_callback(unsigned char *buf, uint32_t len) {
     // overflow condition: the caller is not reading fast enough
     if (_buf_count == optNumBuffers) {
         _overflowEvent = true;
@@ -95,7 +87,7 @@ void SoapyMiri::rx_callback(unsigned char *buf, uint32_t len)
         _buf_count++;
     }
 
-    //notify readStream()
+    // notify readStream()
     _buf_cond.notify_one();
 }
 
@@ -107,8 +99,8 @@ SoapySDR::Stream *SoapyMiri::setupStream(
         const int direction,
         const std::string &format,
         const std::vector<size_t> &channels,
-        const SoapySDR::Kwargs &args)
-{
+        const SoapySDR::Kwargs &args
+) {
     if (direction != SOAPY_SDR_RX) {
         throw std::runtime_error("LibMiriSDR supports only RX.");
     }
@@ -124,17 +116,14 @@ SoapySDR::Stream *SoapyMiri::setupStream(
     sampleFormat = MIRI_FORMAT_CF32;
 
     optBufferLength = DEFAULT_BUFFER_LENGTH;
-    if (args.count("bufflen") != 0)
-    {
-        try
-        {
+    if (args.count("bufflen") != 0) {
+        try {
             int bufferLength_in = std::stoi(args.at("bufflen"));
-            if (bufferLength_in > 0)
-            {
+            if (bufferLength_in > 0) {
                 optBufferLength = bufferLength_in;
             }
         }
-        catch (const std::invalid_argument &){}
+        catch (const std::invalid_argument &) {}
     }
     SoapySDR_logf(SOAPY_SDR_DEBUG, "RTL-SDR Using buffer length %d", optBufferLength);
 
@@ -146,7 +135,7 @@ SoapySDR::Stream *SoapyMiri::setupStream(
                 optNumBuffers = numBuffers_in;
             }
         }
-        catch (const std::invalid_argument &){}
+        catch (const std::invalid_argument &) {}
     }
     SoapySDR_logf(SOAPY_SDR_DEBUG, "SoapyMiri Using %d buffers", optNumBuffers);
 
@@ -165,14 +154,12 @@ SoapySDR::Stream *SoapyMiri::setupStream(
     return (SoapySDR::Stream *) this;
 }
 
-void SoapyMiri::closeStream(SoapySDR::Stream *stream)
-{
+void SoapyMiri::closeStream(SoapySDR::Stream *stream) {
     this->deactivateStream(stream, 0, 0);
     buffs.clear();
 }
 
-size_t SoapyMiri::getStreamMTU(SoapySDR::Stream *stream) const
-{
+size_t SoapyMiri::getStreamMTU(SoapySDR::Stream *stream) const {
     return optBufferLength / BYTES_PER_SAMPLE;
 }
 
@@ -180,16 +167,15 @@ int SoapyMiri::activateStream(
         SoapySDR::Stream *stream,
         const int flags,
         const long long timeNs,
-        const size_t numElems)
-{
+        const size_t numElems
+) {
     if (!dev)
         return 0;
 
     resetBuffer = true;
     remainingElems = 0;
 
-    if (!_rx_async_thread.joinable())
-    {
+    if (!_rx_async_thread.joinable()) {
         mirisdr_reset_buffer(dev);
         _rx_async_thread = std::thread(&SoapyMiri::rx_async_operation, this);
     }
@@ -197,13 +183,11 @@ int SoapyMiri::activateStream(
     return 0;
 }
 
-int SoapyMiri::deactivateStream(SoapySDR::Stream *stream, const int flags, const long long timeNs)
-{
+int SoapyMiri::deactivateStream(SoapySDR::Stream *stream, const int flags, const long long timeNs) {
     if (!dev)
         return 0;
 
-    if (_rx_async_thread.joinable())
-    {
+    if (_rx_async_thread.joinable()) {
         mirisdr_cancel_async(dev);
         _rx_async_thread.join();
     }
@@ -212,26 +196,24 @@ int SoapyMiri::deactivateStream(SoapySDR::Stream *stream, const int flags, const
 
 int SoapyMiri::readStream(
         SoapySDR::Stream *stream,
-        void * const *buffs,
+        void *const *buffs,
         const size_t numElems,
         int &flags,
         long long &timeNs,
-        const long timeoutUs)
-{
+        const long timeoutUs
+) {
     // drop remainder buffer on reset
-    if (resetBuffer && remainingElems != 0)
-    {
+    if (resetBuffer && remainingElems != 0) {
         remainingElems = 0;
         this->releaseReadBuffer(stream, _currentHandle);
     }
 
     // this is the user's buffer for channel 0
-    void* buff0 = buffs[0];
+    void *buff0 = buffs[0];
 
     // are elements left in the buffer? if not, do a new read.
-    if (remainingElems == 0)
-    {
-        int ret = this->acquireReadBuffer(stream, _currentHandle, (const void **)&_currentBuff, flags, timeNs, timeoutUs);
+    if (remainingElems == 0) {
+        int ret = this->acquireReadBuffer(stream, _currentHandle, (const void **) &_currentBuff, flags, timeNs, timeoutUs);
         if (ret < 0) {
             return ret;
         }
@@ -241,18 +223,18 @@ int SoapyMiri::readStream(
     size_t returnedElems = std::min(remainingElems, numElems);
 
     // convert into user's buff0
-    if (sampleFormat == MIRI_FORMAT_CF32)
-    {
-        float* ftarget = (float*) buff0;
+    if (sampleFormat == MIRI_FORMAT_CF32) {
+        float *ftarget = (float *) buff0;
         for (size_t i = 0; i < returnedElems; i++) {
-            ftarget[i * 2 + 0] = (float) _currentBuff[i * 2 + 0] * (1.0f/4096.0f);
-            ftarget[i * 2 + 1] = (float) _currentBuff[i * 2 + 1] * (1.0f/4096.0f);
+            ftarget[i * 2 + 0] = (float) _currentBuff[i * 2 + 0] * (1.0f / 4096.0f);
+            ftarget[i * 2 + 1] = (float) _currentBuff[i * 2 + 1] * (1.0f / 4096.0f);
         }
     }
 
     // bump variables for next call into readStream
     remainingElems -= returnedElems;
-    _currentBuff += returnedElems * 2; // BYTES_PER_SAMPLE is handled by _currentBuff being uint16_t*, only account for I/Q.
+    // BYTES_PER_SAMPLE is handled by _currentBuff being uint16_t*, only account for I/Q.
+    _currentBuff += returnedElems * 2;
 
     if (remainingElems != 0) {
         flags |= SOAPY_SDR_MORE_FRAGMENTS;
@@ -268,28 +250,25 @@ int SoapyMiri::readStream(
  * Direct buffer access API
  ******************************************************************/
 
-size_t SoapyMiri::getNumDirectAccessBuffers(SoapySDR::Stream *stream)
-{
+size_t SoapyMiri::getNumDirectAccessBuffers(SoapySDR::Stream *stream) {
     return buffs.size();
 }
 
-int SoapyMiri::getDirectAccessBufferAddrs(SoapySDR::Stream *stream, const size_t handle, void **outBuffs)
-{
-    outBuffs[0] = (void *)buffs[handle].data.data();
+int SoapyMiri::getDirectAccessBufferAddrs(SoapySDR::Stream *stream, const size_t handle, void **outBuffs) {
+    outBuffs[0] = (void *) buffs[handle].data.data();
     return 0;
 }
 
 int SoapyMiri::acquireReadBuffer(
-    SoapySDR::Stream *stream,
-    size_t &handle,
-    const void **outBuffs,
-    int &flags,
-    long long &timeNs,
-    const long timeoutUs)
-{
+        SoapySDR::Stream *stream,
+        size_t &handle,
+        const void **outBuffs,
+        int &flags,
+        long long &timeNs,
+        const long timeoutUs
+) {
     // reset is issued by various settings to drain old data out of the queue
-    if (resetBuffer)
-    {
+    if (resetBuffer) {
         // drain all buffers from the fifo
         _buf_head = (_buf_head + _buf_count.exchange(0)) % optNumBuffers;
         resetBuffer = false;
@@ -297,8 +276,7 @@ int SoapyMiri::acquireReadBuffer(
     }
 
     // handle overflow from the rx callback thread
-    if (_overflowEvent)
-    {
+    if (_overflowEvent) {
         // drain the old buffers from the fifo
         _buf_head = (_buf_head + _buf_count.exchange(0)) % optNumBuffers;
         _overflowEvent = false;
@@ -307,10 +285,9 @@ int SoapyMiri::acquireReadBuffer(
     }
 
     // wait for a buffer to become available
-    if (_buf_count == 0)
-    {
-        std::unique_lock <std::mutex> lock(_buf_mutex);
-        _buf_cond.wait_for(lock, std::chrono::microseconds(timeoutUs), [this]{ return _buf_count != 0; });
+    if (_buf_count == 0) {
+        std::unique_lock<std::mutex> lock(_buf_mutex);
+        _buf_cond.wait_for(lock, std::chrono::microseconds(timeoutUs), [this] { return _buf_count != 0; });
         if (_buf_count == 0) {
             return SOAPY_SDR_TIMEOUT;
         }
@@ -319,17 +296,14 @@ int SoapyMiri::acquireReadBuffer(
     // extract handle and buffer
     handle = _buf_head;
     _buf_head = (_buf_head + 1) % optNumBuffers;
-    outBuffs[0] = (void *)buffs[handle].data.data();
+    outBuffs[0] = (void *) buffs[handle].data.data();
 
     // return number available
     return buffs[handle].data.size() / BYTES_PER_SAMPLE / 2; // 2 = I/Q, BYTES_PER_SAMPLE = 2 for uint16_t
-                                                             // (since we only return 12-bit values wrapped in shorts)
+    // (since we only return 12-bit values wrapped in shorts)
 }
 
-void SoapyMiri::releaseReadBuffer(
-    SoapySDR::Stream *stream,
-    const size_t handle)
-{
+void SoapyMiri::releaseReadBuffer(SoapySDR::Stream *stream, const size_t handle) {
     //TODO this wont handle out of order releases
     _buf_count--;
 }

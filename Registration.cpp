@@ -1,18 +1,15 @@
 #include "SoapyMiri.hpp"
 #include <SoapySDR/Registry.hpp>
 
-std::vector<SoapySDR::Kwargs> SoapyMiri::findMiriSDR(const SoapySDR::Kwargs &args)
-{
+std::vector<SoapySDR::Kwargs> SoapyMiri::findMiriSDR(const SoapySDR::Kwargs &args) {
     std::vector<SoapySDR::Kwargs> results;
 
     char manufact[256], product[256], serial[256];
 
     const size_t this_count = mirisdr_get_device_count();
 
-    for (size_t i = 0; i < this_count; i++)
-    {
-        if (mirisdr_get_device_usb_strings(i, manufact, product, serial) != 0)
-        {
+    for (size_t i = 0; i < this_count; i++) {
+        if (mirisdr_get_device_usb_strings(i, manufact, product, serial) != 0) {
             SoapySDR_logf(SOAPY_SDR_ERROR, "rtlsdr_get_device_usb_strings(%zu) failed", i);
             continue;
         }
@@ -40,8 +37,7 @@ std::vector<SoapySDR::Kwargs> SoapyMiri::findMiriSDR(const SoapySDR::Kwargs &arg
     return results;
 }
 
-static SoapySDR::Device *makeMiriSDR(const SoapySDR::Kwargs &args)
-{
+static SoapySDR::Device *makeMiriSDR(const SoapySDR::Kwargs &args) {
     return new SoapyMiri(args);
 }
 

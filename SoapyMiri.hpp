@@ -13,13 +13,11 @@
 #define DEFAULT_NUM_BUFFERS 15
 #define BYTES_PER_SAMPLE 2
 
-typedef enum miriSampleFormat
-{
+typedef enum miriSampleFormat {
     MIRI_FORMAT_CF32
 } miriSampleFormat;
 
-class SoapyMiri: public SoapySDR::Device
-{
+class SoapyMiri : public SoapySDR::Device {
 public:
     SoapyMiri(const SoapySDR::Kwargs &args);
 
@@ -54,7 +52,7 @@ public:
     SoapySDR::ArgInfoList getStreamArgsInfo(const int direction, const size_t channel) const;
 
     SoapySDR::Stream *setupStream(const int direction, const std::string &format, const std::vector<size_t> &channels =
-            std::vector<size_t>(), const SoapySDR::Kwargs &args = SoapySDR::Kwargs());
+    std::vector<size_t>(), const SoapySDR::Kwargs &args = SoapySDR::Kwargs());
 
     void closeStream(SoapySDR::Stream *stream);
 
@@ -70,7 +68,7 @@ public:
 
     int readStream(
             SoapySDR::Stream *stream,
-            void * const *buffs,
+            void *const *buffs,
             const size_t numElems,
             int &flags,
             long long &timeNs,
@@ -85,16 +83,16 @@ public:
     int getDirectAccessBufferAddrs(SoapySDR::Stream *stream, const size_t handle, void **buffs);
 
     int acquireReadBuffer(
-        SoapySDR::Stream *stream,
-        size_t &handle,
-        const void **buffs,
-        int &flags,
-        long long &timeNs,
-        const long timeoutUs = 100000);
+            SoapySDR::Stream *stream,
+            size_t &handle,
+            const void **buffs,
+            int &flags,
+            long long &timeNs,
+            const long timeoutUs = 100000);
 
     void releaseReadBuffer(
-        SoapySDR::Stream *stream,
-        const size_t handle);
+            SoapySDR::Stream *stream,
+            const size_t handle);
 
     /*******************************************************************
      * Antenna API
@@ -204,15 +202,16 @@ private:
     miriSampleFormat sampleFormat;
 
 public:
-    struct Buffer
-    {
+    struct Buffer {
         unsigned long long tick;
         std::vector<signed char> data;
     };
 
     //async api usage
     std::thread _rx_async_thread;
+
     void rx_async_operation(void);
+
     void rx_callback(unsigned char *buf, uint32_t len);
 
     // driver options
@@ -220,10 +219,10 @@ public:
     size_t optBufferLength;
 
     std::vector<Buffer> buffs;
-    size_t	_buf_head;
-    size_t	_buf_tail;
-    std::atomic<size_t>	_buf_count;
-    uint16_t* _currentBuff;
+    size_t _buf_head;
+    size_t _buf_tail;
+    std::atomic<size_t> _buf_count;
+    uint16_t *_currentBuff;
     std::atomic<bool> _overflowEvent;
     size_t _currentHandle;
     size_t remainingElems;
