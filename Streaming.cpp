@@ -231,14 +231,14 @@ int SoapyMiri::readStream(
     if (sampleFormat == MIRI_FORMAT_CF32) {
         float *ftarget = (float *) buff0;
         for (size_t i = 0; i < returnedElems; i++) {
-            ftarget[i * 2 + 0] = (float) _currentBuff[i * 2 + 0] * (1.0f / 4096.0f);
-            ftarget[i * 2 + 1] = (float) _currentBuff[i * 2 + 1] * (1.0f / 4096.0f);
+            ftarget[i * 2 + 0] = ((float) _currentBuff[i * 2 + 0]) * (1.0f / 32768.0f);
+            ftarget[i * 2 + 1] = ((float) _currentBuff[i * 2 + 1]) * (1.0f / 32768.0f);
         }
     }
 
     // bump variables for next call into readStream
     remainingElems -= returnedElems;
-    // BYTES_PER_SAMPLE is handled by _currentBuff being uint16_t*, only account for I/Q.
+    // BYTES_PER_SAMPLE is handled by _currentBuff being int16_t*, only account for I/Q.
     _currentBuff += returnedElems * 2;
 
     if (remainingElems != 0) {
