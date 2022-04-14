@@ -279,6 +279,7 @@ std::vector<double> SoapyMiri::listSampleRates(const int direction, const size_t
     results.push_back(8e6); // known to work
     results.push_back(9e6);
     results.push_back(10e6);
+    results.push_back(12e6); // 12 Msps seems to be the limit for my MSI.SDR blue clone
 
     return results;
 }
