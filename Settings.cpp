@@ -277,6 +277,8 @@ std::vector<double> SoapyMiri::listSampleRates(const int direction, const size_t
     results.push_back(6e6);
     results.push_back(7e6);
     results.push_back(8e6); // known to work
+    results.push_back(9e6);
+    results.push_back(10e6);
 
     return results;
 }
