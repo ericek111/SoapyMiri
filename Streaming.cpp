@@ -130,7 +130,7 @@ SoapySDR::Stream *SoapyMiri::setupStream(
         }
         catch (const std::invalid_argument &) {}
     }
-    SoapySDR_logf(SOAPY_SDR_DEBUG, "RTL-SDR Using buffer length %d", optBufferLength);
+    SoapySDR_logf(SOAPY_SDR_DEBUG, "SoapyMiri Using buffer length %d", optBufferLength);
 
     optNumBuffers = DEFAULT_NUM_BUFFERS;
     if (args.count("buffers") != 0) {
