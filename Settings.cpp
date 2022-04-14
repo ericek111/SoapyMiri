@@ -147,7 +147,7 @@ void SoapyMiri::setGain(const int direction, const size_t channel, const double 
     if (!dev)
         return;
 
-    mirisdr_set_tuner_gain(dev, (int) (value * 10.0));
+    mirisdr_set_tuner_gain(dev, (int) value);
 }
 
 void SoapyMiri::setGain(const int direction, const size_t channel, const std::string &name, const double value) {
@@ -167,7 +167,7 @@ double SoapyMiri::getGain(const int direction, const size_t channel, const std::
         return 0.0;
 
     if (name == "LNA") {
-        return ((double) mirisdr_get_tuner_gain(dev)) / 10.0;
+        return ((double) mirisdr_get_tuner_gain(dev));
     }
 
     return 0.0;
