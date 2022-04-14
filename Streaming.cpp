@@ -101,6 +101,11 @@ SoapySDR::Stream *SoapyMiri::setupStream(
         const std::vector<size_t> &channels,
         const SoapySDR::Kwargs &args
 ) {
+
+    if (!dev) {
+        throw std::runtime_error("Trying to setupStream without an initialized MiriSDR!");
+    }
+
     if (direction != SOAPY_SDR_RX) {
         throw std::runtime_error("LibMiriSDR supports only RX.");
     }

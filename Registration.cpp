@@ -10,7 +10,7 @@ std::vector<SoapySDR::Kwargs> SoapyMiri::findMiriSDR(const SoapySDR::Kwargs &arg
 
     for (size_t i = 0; i < this_count; i++) {
         if (mirisdr_get_device_usb_strings(i, manufact, product, serial) != 0) {
-            SoapySDR_logf(SOAPY_SDR_ERROR, "rtlsdr_get_device_usb_strings(%zu) failed", i);
+            SoapySDR_logf(SOAPY_SDR_ERROR, "mirisdr_get_device_usb_strings(%zu) failed", i);
             continue;
         }
         SoapySDR_logf(SOAPY_SDR_DEBUG, "\tManufacturer: %s, Product Name: %s, Serial: %s", manufact, product, serial);
