@@ -24,6 +24,11 @@ SoapyMiri::SoapyMiri(const SoapySDR::Kwargs &args) :
     if (mirisdr_open(&dev, deviceIdx) != 0) {
         throw std::runtime_error("Unable to open LibMiriSDR device.");
     }
+
+    // we only support SDRplay
+    mirisdr_set_hw_flavour(dev, MIRISDR_HW_SDRPLAY);
+
+    mirisdr_reset(dev);
 }
 
 SoapyMiri::~SoapyMiri(void) {
