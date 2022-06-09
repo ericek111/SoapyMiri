@@ -14,7 +14,8 @@
 #define BYTES_PER_SAMPLE 2
 
 typedef enum miriSampleFormat {
-    MIRI_FORMAT_CF32
+    MIRI_FORMAT_CS16,
+    MIRI_FORMAT_CF32,
 } miriSampleFormat;
 
 class SoapyMiri : public SoapySDR::Device {

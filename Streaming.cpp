@@ -4,15 +4,14 @@
 #include <cstring>
 
 std::vector<std::string> SoapyMiri::getStreamFormats(const int direction, const size_t channel) const {
-    std::vector<std::string> formats;
-
-    formats.push_back(SOAPY_SDR_CF32);
-
-    return formats;
+    return {
+        SOAPY_SDR_CS16,
+        SOAPY_SDR_CF32,
+    };
 }
 
 std::string SoapyMiri::getNativeStreamFormat(const int direction, const size_t channel, double &fullScale) const {
-    fullScale = 128;
+    fullScale = (1 << 12) - 1;
     return SOAPY_SDR_CU16;
 }
 
@@ -114,11 +113,14 @@ SoapySDR::Stream *SoapyMiri::setupStream(
         throw std::runtime_error("setupStream invalid channel selection");
     }
 
-    if (format != SOAPY_SDR_CF32) {
-        throw std::runtime_error("setupStream: invalid format '" + format + "', only CF32 is supported by SoapyMiri.");
+    if (format == SOAPY_SDR_CS16) {
+        sampleFormat = MIRI_FORMAT_CS16;
+        SoapySDR_logf(SOAPY_SDR_WARNING, "SoapyMiri: CS16 format is untested!");
+    } else if (format == SOAPY_SDR_CF32) {
+        sampleFormat = MIRI_FORMAT_CF32;
+    } else {
+        throw std::runtime_error("setupStream: invalid format '" + format + "', only CS16 and CF32 is supported by SoapyMiri.");
     }
-
-    sampleFormat = MIRI_FORMAT_CF32;
 
     optBufferLength = DEFAULT_BUFFER_LENGTH;
     if (args.count("bufflen") != 0) {
@@ -228,7 +230,9 @@ int SoapyMiri::readStream(
     size_t returnedElems = std::min(remainingElems, numElems);
 
     // convert into user's buff0
-    if (sampleFormat == MIRI_FORMAT_CF32) {
+    if (sampleFormat == MIRI_FORMAT_CS16) {
+        std::memcpy(buff0, _currentBuff, sizeof(int16_t) * 2 * returnedElems);
+    } else if (sampleFormat == MIRI_FORMAT_CF32) {
         float *ftarget = (float *) buff0;
         for (size_t i = 0; i < returnedElems; i++) {
             ftarget[i * 2 + 0] = ((float) _currentBuff[i * 2 + 0]) * (1.0f / 32768.0f);
