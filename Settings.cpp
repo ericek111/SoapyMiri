@@ -269,10 +269,9 @@ std::vector<double> SoapyMiri::listSampleRates(const int direction, const size_t
 
     std::vector<double> results;
 
-    results.push_back(200000);
-    results.push_back(300000);
-    results.push_back(600000);
+    results.push_back(1300000);
     results.push_back(1536000);
+    results.push_back(2048000);
     results.push_back(5e6);
     results.push_back(6e6);
     results.push_back(7e6);
