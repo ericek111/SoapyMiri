@@ -286,12 +286,10 @@ std::vector<double> SoapyMiri::listSampleRates(const int direction, const size_t
 SoapySDR::RangeList SoapyMiri::getSampleRateRange(const int direction, const size_t channel) const {
     SoapySDR::RangeList results;
 
-    std::vector<double> listedRanges = listBandwidths(direction, channel);
+    std::vector<double> listedRanges = listSampleRates(direction, channel);
     for (const auto &val : listedRanges) {
         results.push_back(SoapySDR::Range(val, val));
     }
-
-    results.push_back(SoapySDR::Range(0, 8e6)); // known to work
 
     return results;
 }
