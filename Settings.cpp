@@ -348,13 +348,20 @@ SoapySDR::ArgInfoList SoapyMiri::getSettingInfo(void) const {
     SoapySDR::ArgInfoList setArgs;
 
     SoapySDR::ArgInfo offsetTuneArg;
-
     offsetTuneArg.key = "offset_tune";
     offsetTuneArg.value = "false";
     offsetTuneArg.name = "Offset Tune";
     offsetTuneArg.description = "MiriSDR Offset Tuning Mode";
     offsetTuneArg.type = SoapySDR::ArgInfo::BOOL;
     setArgs.push_back(offsetTuneArg);
+
+    SoapySDR::ArgInfo biasTeeArg;
+    biasTeeArg.key = "biastee";
+    biasTeeArg.value = "false";
+    biasTeeArg.name = "Bias Tee";
+    biasTeeArg.description = "GPIO8 pin enable (bias tee)";
+    biasTeeArg.type = SoapySDR::ArgInfo::BOOL;
+    setArgs.push_back(biasTeeArg);
 
     return setArgs;
 }
@@ -370,6 +377,10 @@ void SoapyMiri::writeSetting(const std::string &key, const std::string &value) {
         if (mirisdr_set_offset_tuning(dev, offsetMode ? 1 : 0) != 0) {
             throw std::runtime_error("mirisdr_set_offset_tuning failed");
         }
+    } else if (key == "biastee") {
+        bool enableBiasTee = (value == "true");
+        SoapySDR_logf(SOAPY_SDR_DEBUG, "MiriSDR bias tee mode: %s", enableBiasTee ? "true" : "false");
+        mirisdr_set_bias(dev, enableBiasTee ? 1 : 0);
     }
 }
 
@@ -380,6 +391,8 @@ std::string SoapyMiri::readSetting(const std::string &key) const {
     if (key == "offset_tune") {
         // TODO: create `mirisdr_get_offset_tuning`
         return isOffsetTuning ? "true" : "false";
+    } else if (key == "biastee") {
+        return mirisdr_get_bias(dev) ? "true" : "false";
     }
 
     SoapySDR_logf(SOAPY_SDR_WARNING, "Unknown setting '%s'", key.c_str());
