@@ -11,8 +11,8 @@ std::vector<std::string> SoapyMiri::getStreamFormats(const int direction, const 
 }
 
 std::string SoapyMiri::getNativeStreamFormat(const int direction, const size_t channel, double &fullScale) const {
-    fullScale = (1 << 12) - 1;
-    return SOAPY_SDR_CU16;
+    fullScale = 1 << 16;
+    return SOAPY_SDR_CS16;
 }
 
 SoapySDR::ArgInfoList SoapyMiri::getStreamArgsInfo(const int direction, const size_t channel) const {
