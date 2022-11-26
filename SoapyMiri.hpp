@@ -201,6 +201,11 @@ private:
     bool isOffsetTuning;
     double sampleRate;
     miriSampleFormat sampleFormat;
+    std::map<std::string, mirisdr_hw_flavour_t> flavourMap = {
+        { "Default", MIRISDR_HW_DEFAULT },
+        { "SDRplay", MIRISDR_HW_SDRPLAY },
+    };
+    mirisdr_hw_flavour_t hwFlavour = MIRISDR_HW_DEFAULT;
 
 public:
     struct Buffer {

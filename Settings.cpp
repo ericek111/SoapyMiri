@@ -363,6 +363,18 @@ SoapySDR::ArgInfoList SoapyMiri::getSettingInfo(void) const {
     biasTeeArg.type = SoapySDR::ArgInfo::BOOL;
     setArgs.push_back(biasTeeArg);
 
+    SoapySDR::ArgInfo flavourArg;
+    flavourArg.key = "flavour";
+    flavourArg.value = "false";
+    flavourArg.name = "HW flavour";
+    flavourArg.description = "HW variant of the RSP1";
+    flavourArg.type = SoapySDR::ArgInfo::STRING;
+    flavourArg.options.reserve(flavourMap.size());
+    for(const auto &entry : flavourMap) {
+        flavourArg.options.push_back(entry.first);
+    }
+    setArgs.push_back(flavourArg);
+
     return setArgs;
 }
 
@@ -381,7 +393,15 @@ void SoapyMiri::writeSetting(const std::string &key, const std::string &value) {
         bool enableBiasTee = (value == "true");
         SoapySDR_logf(SOAPY_SDR_DEBUG, "MiriSDR bias tee mode: %s", enableBiasTee ? "true" : "false");
         mirisdr_set_bias(dev, enableBiasTee ? 1 : 0);
+    } else if (key == "flavour") {
+        if (flavourMap.count(value)) {
+            mirisdr_set_hw_flavour(dev, flavourMap[value]);
+            hwFlavour = flavourMap[value];
+        } else {
+            SoapySDR_logf(SOAPY_SDR_ERROR, "MiriSDR invalid HW flavour: %s", value.c_str());
+        }
     }
+
 }
 
 std::string SoapyMiri::readSetting(const std::string &key) const {
@@ -393,6 +413,15 @@ std::string SoapyMiri::readSetting(const std::string &key) const {
         return isOffsetTuning ? "true" : "false";
     } else if (key == "biastee") {
         return mirisdr_get_bias(dev) ? "true" : "false";
+    } else if (key == "flavour") {
+        for (const auto &entry : flavourMap) {
+            if (entry.second == hwFlavour) {
+                return entry.first;
+            }
+        }
+        // assert: flavour set to something impossible
+        SoapySDR_logf(SOAPY_SDR_ERROR, "MiriSDR HW flavour set to unknown value: %d", hwFlavour);
+        return "";
     }
 
     SoapySDR_logf(SOAPY_SDR_WARNING, "Unknown setting '%s'", key.c_str());
