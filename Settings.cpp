@@ -113,7 +113,11 @@ double SoapyMiri::getFrequencyCorrection(const int direction, const size_t chann
 
 std::vector<std::string> SoapyMiri::listGains(const int direction, const size_t channel) const {
     std::vector<std::string> gains;
-    gains.push_back("LNA");
+    gains.emplace_back("Automatic");
+    gains.emplace_back("LNA");
+    gains.emplace_back("Baseband");
+    gains.emplace_back("Mixer");
+    gains.emplace_back("Mixbuffer");
     return gains;
 }
 
@@ -142,16 +146,23 @@ void SoapyMiri::setGain(const int direction, const size_t channel, const double 
     if (!dev)
         return;
 
-    mirisdr_set_tuner_gain(dev, (int) value);
+    setGain(direction, channel, "Automatic", value);
 }
 
 void SoapyMiri::setGain(const int direction, const size_t channel, const std::string &name, const double value) {
     if (!dev)
         return;
 
-    if (name == "LNA") {
-        // The only implemented gain control at this moment is for LNA.
-        setGain(direction, channel, value);
+    if (name == "Automatic") {
+        mirisdr_set_tuner_gain(dev, (int) value);
+    } else if (name == "LNA") {
+        mirisdr_set_lna_gain(dev, (int) value);
+    } else if (name == "Baseband") {
+        mirisdr_set_baseband_gain(dev, (int) value);
+    } else if (name == "Mixer") {
+        mirisdr_set_mixer_gain(dev, (int) value);
+    } else if (name == "Mixbuffer") {
+        mirisdr_set_mixbuffer_gain(dev, (int) value);
     } else {
         SoapySDR_logf(SOAPY_SDR_WARNING, "Trying to set non-existent gain '%s' to %f!", name.c_str(), value);
     }
@@ -161,8 +172,16 @@ double SoapyMiri::getGain(const int direction, const size_t channel, const std::
     if (!dev)
         return 0.0;
 
-    if (name == "LNA") {
+    if (name == "Automatic") {
         return ((double) mirisdr_get_tuner_gain(dev));
+    } else if (name == "LNA") {
+        return ((double) mirisdr_get_lna_gain(dev));
+    } else if (name == "Baseband") {
+        return ((double) mirisdr_get_baseband_gain(dev));
+    } else if (name == "Mixer") {
+        return ((double) mirisdr_get_mixer_gain(dev));
+    } else if (name == "Mixbuffer") {
+        return ((double) mirisdr_get_mixbuffer_gain(dev));
     }
 
     return 0.0;
@@ -174,8 +193,22 @@ SoapySDR::Range SoapyMiri::getGainRange(const int direction, const size_t channe
 
     // `mirisdr_get_tuner_gains` writes many integers into the `int* gains` parameter.
     // This is a bit ridiculous. So we'll just get the highest value and assume 0 as the lowest.
-    int highest = mirisdr_get_tuner_gains(dev, nullptr);
-    return SoapySDR::Range(0, highest);
+    static int highest = mirisdr_get_tuner_gains(dev, nullptr);
+
+    if (name == "Automatic") {
+        return {0, static_cast<double>(highest), 1};
+    } else if (name == "LNA") {
+        return {0, 1, 1}; // 24 dB
+    } else if (name == "Baseband") {
+        return {0, 59, 1};
+    } else if (name == "Mixer") {
+        return {0, 19, 19};
+    } else if (name == "Mixbuffer") {
+        return {0, 24, 6};
+    }
+
+    SoapySDR_logf(SOAPY_SDR_WARNING, "Unknown range '%s'", name.c_str());
+    return {0, 1, 1}; // should never happen
 }
 
 
