@@ -358,6 +358,7 @@ std::vector<double> SoapyMiri::listBandwidths(const int direction, const size_t 
     results.push_back(6000000); // MIRISDR_BW_6MHZ
     results.push_back(7000000); // MIRISDR_BW_7MHZ
     results.push_back(8000000); // MIRISDR_BW_8MHZ
+    results.push_back(14000000); // MIRISDR_BW_MAX
 
     return results;
 }
