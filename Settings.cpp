@@ -175,7 +175,7 @@ double SoapyMiri::getGain(const int direction, const size_t channel, const std::
     if (name == "Automatic") {
         return ((double) mirisdr_get_tuner_gain(dev));
     } else if (name == "LNA") {
-        return ((double) mirisdr_get_lna_gain(dev));
+        return mirisdr_get_lna_gain(dev) > 0 ? 1.0 : 0.0; // returns 0 or 24, clamp it to the gain's range (0-1)
     } else if (name == "Baseband") {
         return ((double) mirisdr_get_baseband_gain(dev));
     } else if (name == "Mixer") {
