@@ -2,3 +2,10 @@
 /build/
 /cmake-build-debug/
 /CMakeLists.txt.user
+debian/.debhelper
+debian/debhelper-build-stamp
+debian/files
+debian/soapysdr-module-soapymiri
+debian/soapysdr-module-soapymiri.debhelper.log
+debian/soapysdr-module-soapymiri.substvars
+obj-x86_64-linux-gnu

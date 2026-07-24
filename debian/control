@@ -1,0 +1,17 @@
+Source: soapysdr-module-soapymiri
+Section: hamradio
+Priority: optional
+Maintainer: ericek111 <erik@brocko.eu>
+Rules-Requires-Root: no
+Build-Depends: debhelper-compat (= 13), cmake, libsoapysdr-dev
+Standards-Version: 4.7.0
+Homepage: https://github.com/ericek111/SoapyMiri
+#Vcs-Browser: https://salsa.debian.org/debian/soapyMiri
+Vcs-Git: https://github.com/ericek111/SoapyMiri.git
+
+Package: soapysdr-module-soapymiri
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, libsoapysdr0.8
+Multi-Arch: same
+Description: Library for Mirics-based devices
+ Software support for the Mirics based software defined radio devices
